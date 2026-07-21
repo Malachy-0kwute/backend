@@ -36,6 +36,18 @@ router.get('/songs', async (req, res) => {
   }
 });
 
+
+// get a single song
+router.get('/songs/:id', async (req, res) => {
+  try {
+    const song = await Song.findById(req.params.id);
+    res.json(song);
+  } catch (error) {
+    res.status(400).json(error);
+    console.error(error);
+  }
+});
+
 // create a song
 router.post('/songs', async (req, res) => {
   try {
@@ -50,4 +62,14 @@ router.post('/songs', async (req, res) => {
   }
 });
 
-// 
+// update a song information 
+router.put('/songs/:id', async (req, res) => {
+  try {
+    const song = req.body;
+    await Song.updateOne({_id : req.params.id}, song);
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(400).json(error);
+    console.error(error);
+  }
+});
