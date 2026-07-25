@@ -73,3 +73,9 @@ router.put('/songs/:id', async (req, res) => {
     console.error(error);
   }
 });
+
+// delete a song
+router.delete('/songs/:id', async (req, res) => {
+  
+
+});
