@@ -22,13 +22,15 @@ app.use(bodyParser.json());
 // all request starts with /api... e.g. the url would be http://localhost:3000/api/song.
 app.use('/api', router);
 
+let port = process.env.PORT || 3000;
+
 // start the server and listen on port 3000
-app.listen(3000, function () {
+app.listen(port, () => {
   console.log('Server is running on port 3000');
 });
 
 // get all songs in db
-router.get('/song', async (req, res) => {
+router.get('/songs', async (req, res) => {
   try {
     const songs = await Song.find({});
     res.send(songs);
@@ -108,4 +110,55 @@ router.post('/user', async (req, res) => {
   } catch (error) {
     res.status(400).json(error);
   }
+});
+
+
+// User authentication
+
+// login 
+router.post('/auth', async (req, res) => {
+   if (!req.body.username || !req.body.password) {
+    res.status(400).json({error: 'Missing username or password'});
+    return;
+  }
+  
+  const user = await User.findOne({username: req.body.username});
+
+  if(user.username != req.body.username || user.password != req.body.password) {
+      res.status(401).json({
+        error: 'Incorrect username or password',
+        auth: 0
+      });
+
+  } else {
+
+    username2 = user.username;
+    const token = jwt.encode({username: user.username}, secret);
+    const auth = 1;
+
+    res.json({
+      username2,
+      token: token,
+      auth: auth
+    });
+  }
+
+});
+
+// user online status
+router.get('/status', async (req, res) => {
+  const token = req.headers['x-auth'];
+
+  if (!token) {
+    return res.status(401).json({error: 'token not found'})
+  }
+
+  try {
+    const decoded = jwt.decode(token, secret);
+    let user = User.find({}, 'username status');
+    res.json(users);
+  } catch (error) {
+    res.status(401).json('invalid token')
+  }
+
 });
