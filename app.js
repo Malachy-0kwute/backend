@@ -1,8 +1,9 @@
 // setup.. this is similar to when we use our default tags in html
 const express = require('express');
-
+const jwt = require('jwt-simple');
 const bodyParser = require('body-parser');
 const Song = require('./models/songs');
+const User = require('./models/users');
 
 // use cors in other to host frontend and backend on the same device. 
 // This is because the browser will block requests from different origins.
@@ -13,11 +14,12 @@ const app = express();
 
 // create a router object to handle routes
 const router = express.Router();
+const secret = 'supersecret'
 
 app.use(cors());
 app.use(bodyParser.json());
 
-// all request that usually use an api starts with /api... e.g. the url would be http://localhost:3000/api/songs.
+// all request starts with /api... e.g. the url would be http://localhost:3000/api/song.
 app.use('/api', router);
 
 // start the server and listen on port 3000
@@ -26,7 +28,7 @@ app.listen(3000, function () {
 });
 
 // get all songs in db
-router.get('/songs', async (req, res) => {
+router.get('/song', async (req, res) => {
   try {
     const songs = await Song.find({});
     res.send(songs);
@@ -38,7 +40,7 @@ router.get('/songs', async (req, res) => {
 
 
 // get a single song
-router.get('/songs/:id', async (req, res) => {
+router.get('/song/:id', async (req, res) => {
   try {
     const song = await Song.findById(req.params.id);
     res.json(song);
@@ -49,7 +51,7 @@ router.get('/songs/:id', async (req, res) => {
 });
 
 // create a song
-router.post('/songs', async (req, res) => {
+router.post('/song', async (req, res) => {
   try {
     const song = new Song(req.body);
 
@@ -63,7 +65,7 @@ router.post('/songs', async (req, res) => {
 });
 
 // update a song information 
-router.put('/songs/:id', async (req, res) => {
+router.put('/song/:id', async (req, res) => {
   try {
     const song = req.body;
     await Song.updateOne({_id : req.params.id}, song);
@@ -75,7 +77,35 @@ router.put('/songs/:id', async (req, res) => {
 });
 
 // delete a song
-router.delete('/songs/:id', async (req, res) => {
-  
+router.delete('/song/:id', async (req, res) => {
 
+  try {
+    await Song.deleteOne({_id: req.params.id});
+    res.sendStatus(204);
+  } catch (error) {
+    res.status(400).send(error);
+  }
+
+});
+
+
+// Users router
+// create user
+router.post('/user', async (req, res) => {
+  if (!req.body.username || !req.body.password) {
+    res.status(400).json({error: 'Missing username or password'});
+  }
+
+  const newUser = new User({
+    username: req.body.username,
+    password: req.body.password,
+    status: req.body.status
+  });
+
+  try {
+    await newUser.save();
+    res.sendStatus(201).json(newUser);
+  } catch (error) {
+    res.status(400).json(error);
+  }
 });
